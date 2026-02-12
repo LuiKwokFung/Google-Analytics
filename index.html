@@ -1,66 +1,87 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
-<div class="bg-gray-100 min-h-screen p-2 md:p-6 font-sans">
-    <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-        
-        <div class="p-4 border-b bg-gray-50">
-            <div class="relative">
-                <input type="text" placeholder="輸入型號：例如 14900K 或 990 Pro..." 
-                       class="w-full border-2 border-blue-400 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                <div class="absolute right-3 top-2.5 text-gray-400">🔍</div>
-            </div>
-            <div class="flex gap-2 mt-3 text-xs">
-                <span class="bg-blue-600 text-white px-2 py-1 rounded cursor-pointer">全部</span>
-                <span class="bg-white border px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">顯示卡</span>
-                <span class="bg-white border px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">處理器</span>
-                <span class="bg-white border px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">儲存裝置</span>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>HK Tech Price - 50+ Items Demo</title>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="sticky top-0 bg-white shadow-md rounded-t-lg p-4 z-10">
+            <input type="text" id="searchInput" onkeyup="filterProducts()" 
+                   placeholder="快速搜尋 50+ 零件 (型號、品牌、行/水)..." 
+                   class="w-full border-2 border-blue-500 rounded-lg px-4 py-3 focus:outline-none">
+            <div class="flex gap-2 mt-3 overflow-x-auto pb-2 text-sm">
+                <button class="bg-blue-600 text-white px-4 py-1 rounded whitespace-nowrap">全部</button>
+                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">顯示卡 (GPU)</button>
+                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">處理器 (CPU)</button>
+                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">內存 (RAM)</button>
+                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">主機板</button>
             </div>
         </div>
 
-        <div class="divide-y divide-gray-100">
-            
-            <div class="p-4 hover:bg-blue-50 transition flex justify-between items-center">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-gray-500">[Intel]</span>
-                        <h3 class="font-bold text-gray-800">Core i7-14700K 處理器</h3>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">20-Core / 28-Thread / LGA1700</div>
-                    <div class="mt-2 flex gap-2">
-                        <span class="text-[10px] px-1.5 py-0.5 border border-green-500 text-green-600 font-bold rounded">香港行貨</span>
-                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">深水埗</span>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-gray-400 block mb-1">今日最低價</span>
-                    <div class="text-xl font-black text-blue-600">$3,120</div>
-                    <div class="text-[10px] text-gray-400 italic">24 mins ago</div>
-                </div>
+        <div id="productContainer" class="bg-white divide-y divide-gray-100 rounded-b-lg overflow-hidden">
             </div>
-
-            <div class="p-4 hover:bg-blue-50 transition flex justify-between items-center">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-gray-500">[Samsung]</span>
-                        <h3 class="font-bold text-gray-800">990 Pro 4TB NVMe M.2</h3>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">Read 7450MB/s / Write 6900MB/s</div>
-                    <div class="mt-2 flex gap-2">
-                        <span class="text-[10px] px-1.5 py-0.5 border border-orange-500 text-orange-600 font-bold rounded">平行進口 (水)</span>
-                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">黃金地庫</span>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-gray-400 block mb-1">今日最低價</span>
-                    <div class="text-xl font-black text-blue-600">$2,450</div>
-                    <div class="text-[10px] text-gray-400 italic">2 hours ago</div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="bg-gray-50 p-3 text-center text-[10px] text-gray-400">
-            目前監控中：12 間店舖 | 2,451 件商品 | 數據每 15 分鐘自動更新一次
-        </div>
     </div>
-</div>
+
+    <script>
+        // 模擬數據庫 50+ 數據
+        const products = [
+            { brand: 'Intel', model: 'Core i9-14900K', spec: '24C/32T / Up to 6.0GHz', price: 4480, shop: '正都', type: '行貨', time: '5m' },
+            { brand: 'AMD', model: 'Ryzen 7 7800X3D', spec: '8C/16T / L3 96MB', price: 2950, shop: '中田', type: '行貨', time: '12m' },
+            { brand: 'NVIDIA', model: 'RTX 4090 Founders Edition', spec: '24GB GDDR6X', price: 14500, shop: '黃金小店', type: '水貨', time: '1h' },
+            { brand: 'ASUS', model: 'ROG STRIX Z790-E GAMING', spec: 'DDR5 / WiFi 6E', price: 3299, shop: 'SE Computer', type: '行貨', time: '30m' },
+            { brand: 'Samsung', model: '990 Pro 2TB', spec: '7450MB/s NVMe Gen4', price: 1280, shop: 'Jumbo', type: '行貨', time: '15m' },
+            { brand: 'Corsair', model: 'Vengeance RGB 32GB (2x16GB)', spec: 'DDR5-6000 CL30', price: 980, shop: '飛馬', type: '行貨', time: '2h' },
+            { brand: 'MSI', model: 'RTX 4070 Ti Super Ventus', spec: '16GB GDDR6X', price: 6299, shop: '正都', type: '行貨', time: '10m' },
+            { brand: 'WD', model: 'SN850X 4TB', spec: '7300MB/s w/ Heatsink', price: 2450, shop: '黃金地庫', type: '水貨', time: '4h' },
+            // ... 這裡可以快速複製更多
+        ];
+
+        // 為了展示 50 個，我們自動生成一些變體數據
+        for(let i=1; i<=42; i++) {
+            products.push({
+                brand: ['Gigabyte', 'Zotac', 'Crucial', 'Kingston', 'G.Skill'][i%5],
+                model: `零件型號 Demo-Item #${100 + i}`,
+                spec: `規格描述 - 測試數據第 ${i} 號`,
+                price: Math.floor(Math.random() * 5000) + 500,
+                shop: ['首選', '法奧', '科訊', '金昇'][i%4],
+                type: i % 3 === 0 ? '水貨' : '行貨',
+                time: `${i}h`
+            });
+        }
+
+        function render(data) {
+            const container = document.getElementById('productContainer');
+            container.innerHTML = data.map(p => `
+                <div class="p-3 hover:bg-gray-50 flex justify-between items-center border-b border-gray-50">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-gray-400 font-mono">[${p.brand}]</span>
+                            <span class="${p.type === '水貨' ? 'text-orange-500 border-orange-500' : 'text-green-600 border-green-600'} border px-1 rounded text-[10px] font-bold">${p.type}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-sm md:text-base">${p.model}</h3>
+                        <p class="text-[11px] text-gray-500">${p.spec}</p>
+                    </div>
+                    <div class="text-right ml-4">
+                        <div class="text-lg font-black text-blue-600 font-mono">$${p.price.toLocaleString()}</div>
+                        <div class="text-[10px] text-gray-400">${p.shop} · ${p.time}前</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => 
+                p.model.toLowerCase().includes(val) || 
+                p.brand.toLowerCase().includes(val) ||
+                p.type.toLowerCase().includes(val)
+            );
+            render(filtered);
+        }
+
+        render(products);
+    </script>
+</body>
+</html>
