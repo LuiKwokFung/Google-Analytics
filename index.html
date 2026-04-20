@@ -2,85 +2,134 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>HK Tech Price - 50+ Items Demo</title>
+    <title>HK Tech Price - 完整零件庫</title>
+    <style>
+        /* 隱藏滾動條但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-gray-100 p-4">
     <div class="max-w-4xl mx-auto">
         <div class="sticky top-0 bg-white shadow-md rounded-t-lg p-4 z-10">
-            <input type="text" id="searchInput" onkeyup="filterProducts()" 
-                   placeholder="快速搜尋 50+ 零件 (型號、品牌、行/水)..." 
-                   class="w-full border-2 border-blue-500 rounded-lg px-4 py-3 focus:outline-none">
-            <div class="flex gap-2 mt-3 overflow-x-auto pb-2 text-sm">
-                <button class="bg-blue-600 text-white px-4 py-1 rounded whitespace-nowrap">全部</button>
-                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">顯示卡 (GPU)</button>
-                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">處理器 (CPU)</button>
-                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">內存 (RAM)</button>
-                <button class="bg-gray-200 px-4 py-1 rounded whitespace-nowrap">主機板</button>
+            <input type="text" id="searchInput" onkeyup="filterAll()" 
+                   placeholder="搜尋型號、品牌或行/水貨..." 
+                   class="w-full border-2 border-blue-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all">
+            
+            <div id="categoryBar" class="flex gap-2 mt-3 overflow-x-auto pb-2 text-sm no-scrollbar">
+                <button onclick="setCategory('All', this)" class="cat-btn bg-blue-600 text-white px-4 py-1 rounded whitespace-nowrap transition-colors">全部</button>
+                <button onclick="setCategory('GPU', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1 rounded whitespace-nowrap transition-colors">顯示卡 (GPU)</button>
+                <button onclick="setCategory('CPU', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1 rounded whitespace-nowrap transition-colors">處理器 (CPU)</button>
+                <button onclick="setCategory('RAM', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1 rounded whitespace-nowrap transition-colors">內存 (RAM)</button>
+                <button onclick="setCategory('MB', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1 rounded whitespace-nowrap transition-colors">主機板</button>
+                <button onclick="setCategory('SSD', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1 rounded whitespace-nowrap transition-colors">儲存 (SSD)</button>
             </div>
         </div>
 
-        <div id="productContainer" class="bg-white divide-y divide-gray-100 rounded-b-lg overflow-hidden">
+        <div id="productContainer" class="bg-white divide-y divide-gray-100 rounded-b-lg overflow-hidden min-h-[500px]">
             </div>
+        
+        <div id="noResult" class="hidden p-10 text-center text-gray-400 bg-white rounded-b-lg">
+            找不到相關零件，請嘗試其他關鍵字。
+        </div>
     </div>
 
     <script>
-        // 模擬數據庫 50+ 數據
+        // 1. 初始化數據庫
+        let currentCategory = 'All';
         const products = [
-            { brand: 'Intel', model: 'Core i9-14900K', spec: '24C/32T / Up to 6.0GHz', price: 4480, shop: '正都', type: '行貨', time: '5m' },
-            { brand: 'AMD', model: 'Ryzen 7 7800X3D', spec: '8C/16T / L3 96MB', price: 2950, shop: '中田', type: '行貨', time: '12m' },
-            { brand: 'NVIDIA', model: 'RTX 4090 Founders Edition', spec: '24GB GDDR6X', price: 14500, shop: '黃金小店', type: '水貨', time: '1h' },
-            { brand: 'ASUS', model: 'ROG STRIX Z790-E GAMING', spec: 'DDR5 / WiFi 6E', price: 3299, shop: 'SE Computer', type: '行貨', time: '30m' },
-            { brand: 'Samsung', model: '990 Pro 2TB', spec: '7450MB/s NVMe Gen4', price: 1280, shop: 'Jumbo', type: '行貨', time: '15m' },
-            { brand: 'Corsair', model: 'Vengeance RGB 32GB (2x16GB)', spec: 'DDR5-6000 CL30', price: 980, shop: '飛馬', type: '行貨', time: '2h' },
-            { brand: 'MSI', model: 'RTX 4070 Ti Super Ventus', spec: '16GB GDDR6X', price: 6299, shop: '正都', type: '行貨', time: '10m' },
-            { brand: 'WD', model: 'SN850X 4TB', spec: '7300MB/s w/ Heatsink', price: 2450, shop: '黃金地庫', type: '水貨', time: '4h' },
-            // ... 這裡可以快速複製更多
+            { brand: 'Intel', category: 'CPU', model: 'Core i9-14900K', spec: '24C/32T / Up to 6.0GHz', price: 4480, shop: '正都', type: '行貨', time: '5m' },
+            { brand: 'AMD', category: 'CPU', model: 'Ryzen 7 7800X3D', spec: '8C/16T / L3 96MB', price: 2950, shop: '中田', type: '行貨', time: '12m' },
+            { brand: 'NVIDIA', category: 'GPU', model: 'RTX 4090 Founders Edition', spec: '24GB GDDR6X', price: 14500, shop: '黃金小店', type: '水貨', time: '1h' },
+            { brand: 'ASUS', category: 'MB', model: 'ROG STRIX Z790-E GAMING', spec: 'DDR5 / WiFi 6E', price: 3299, shop: 'SE Computer', type: '行貨', time: '30m' },
+            { brand: 'Samsung', category: 'SSD', model: '990 Pro 2TB', spec: '7450MB/s NVMe Gen4', price: 1280, shop: 'Jumbo', type: '行貨', time: '15m' },
+            { brand: 'Corsair', category: 'RAM', model: 'Vengeance RGB 32GB (2x16GB)', spec: 'DDR5-6000 CL30', price: 980, shop: '飛馬', type: '行貨', time: '2h' },
+            { brand: 'MSI', category: 'GPU', model: 'RTX 4070 Ti Super Ventus', spec: '16GB GDDR6X', price: 6299, shop: '正都', type: '行貨', time: '10m' },
+            { brand: 'WD', category: 'SSD', model: 'SN850X 4TB', spec: '7300MB/s w/ Heatsink', price: 2450, shop: '黃金地庫', type: '水貨', time: '4h' }
         ];
 
-        // 為了展示 50 個，我們自動生成一些變體數據
-        for(let i=1; i<=42; i++) {
+        // 模擬填充至 50+ 項數據
+        const catTypes = ['GPU', 'CPU', 'RAM', 'MB', 'SSD'];
+        for(let i=1; i<=45; i++) {
+            const cat = catTypes[i % catTypes.length];
             products.push({
-                brand: ['Gigabyte', 'Zotac', 'Crucial', 'Kingston', 'G.Skill'][i%5],
-                model: `零件型號 Demo-Item #${100 + i}`,
-                spec: `規格描述 - 測試數據第 ${i} 號`,
-                price: Math.floor(Math.random() * 5000) + 500,
-                shop: ['首選', '法奧', '科訊', '金昇'][i%4],
-                type: i % 3 === 0 ? '水貨' : '行貨',
+                brand: ['Gigabyte', 'Zotac', 'Crucial', 'Kingston', 'G.Skill', 'ASRock'][i%6],
+                category: cat,
+                model: `${cat} 測試型號 #${100 + i}`,
+                spec: `自動生成規格描述 - 序列號 ${i * 7}`,
+                price: Math.floor(Math.random() * 8000) + 300,
+                shop: ['首選', '法奧', '科訊', '金昇', 'Jumbo'][i%5],
+                type: i % 4 === 0 ? '水貨' : '行貨',
                 time: `${i}h`
             });
         }
 
+        // 2. 渲染函數
         function render(data) {
             const container = document.getElementById('productContainer');
+            const noResult = document.getElementById('noResult');
+            
+            if (data.length === 0) {
+                container.innerHTML = '';
+                noResult.classList.remove('hidden');
+                return;
+            }
+            
+            noResult.classList.add('hidden');
             container.innerHTML = data.map(p => `
-                <div class="p-3 hover:bg-gray-50 flex justify-between items-center border-b border-gray-50">
+                <div class="p-4 hover:bg-blue-50 flex justify-between items-center transition-colors">
                     <div class="flex-1">
-                        <div class="flex items-center gap-2 text-xs">
-                            <span class="text-gray-400 font-mono">[${p.brand}]</span>
-                            <span class="${p.type === '水貨' ? 'text-orange-500 border-orange-500' : 'text-green-600 border-green-600'} border px-1 rounded text-[10px] font-bold">${p.type}</span>
+                        <div class="flex items-center gap-2 text-xs mb-1">
+                            <span class="text-gray-400 font-mono font-bold uppercase">${p.brand}</span>
+                            <span class="${p.type === '水貨' ? 'text-orange-500 border-orange-500' : 'text-green-600 border-green-600'} border px-1.5 rounded text-[10px] font-bold">${p.type}</span>
+                            <span class="bg-gray-100 text-gray-500 px-1 rounded text-[10px]">${p.category}</span>
                         </div>
-                        <h3 class="font-bold text-gray-800 text-sm md:text-base">${p.model}</h3>
-                        <p class="text-[11px] text-gray-500">${p.spec}</p>
+                        <h3 class="font-bold text-gray-800 text-sm md:text-base leading-tight">${p.model}</h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">${p.spec}</p>
                     </div>
                     <div class="text-right ml-4">
                         <div class="text-lg font-black text-blue-600 font-mono">$${p.price.toLocaleString()}</div>
-                        <div class="text-[10px] text-gray-400">${p.shop} · ${p.time}前</div>
+                        <div class="text-[10px] text-gray-400 mt-1">${p.shop} · ${p.time}前</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function filterProducts() {
-            const val = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = products.filter(p => 
-                p.model.toLowerCase().includes(val) || 
-                p.brand.toLowerCase().includes(val) ||
-                p.type.toLowerCase().includes(val)
-            );
+        // 3. 分類切換邏輯
+        function setCategory(cat, btn) {
+            currentCategory = cat;
+            
+            // 更新按鈕 UI 樣式
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            btn.classList.remove('bg-gray-200', 'text-gray-700');
+            btn.classList.add('bg-blue-600', 'text-white');
+            
+            filterAll(); // 切換分類後重新過濾
+        }
+
+        // 4. 綜合過濾邏輯 (分類 + 搜尋)
+        function filterAll() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = products.filter(p => {
+                const matchCategory = (currentCategory === 'All' || p.category === currentCategory);
+                const matchSearch = (
+                    p.model.toLowerCase().includes(searchTerm) || 
+                    p.brand.toLowerCase().includes(searchTerm) ||
+                    p.type.includes(searchTerm)
+                );
+                return matchCategory && matchSearch;
+            });
+            
             render(filtered);
         }
 
+        // 初始化執行
         render(products);
     </script>
 </body>
