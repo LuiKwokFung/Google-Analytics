@@ -27,18 +27,18 @@
                        placeholder="搜尋型號、品牌..." 
                        class="flex-1 border-2 border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300">
                 
-                <button onclick="toggleSort()" class="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 transition-all flex items-center justify-center w-10 h-10">
+                <button onclick="toggleSort()" class="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 transition-all flex items-center justify-center w-10 h-10 shadow-md active:scale-90">
                     <span id="sortIcon">⇅</span>
                 </button>
             </div>
             
             <div id="categoryBar" class="flex gap-2 overflow-x-auto pb-2 text-sm no-scrollbar">
-                <button data-cat="All" onclick="setCategory('All', this)" class="cat-btn bg-blue-600 text-white px-4 py-1.5 rounded-full whitespace-nowrap shadow-sm">全部</button>
-                <button data-cat="GPU" onclick="setCategory('GPU', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">顯示卡 (GPU)</button>
-                <button data-cat="CPU" onclick="setCategory('CPU', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">處理器 (CPU)</button>
-                <button data-cat="RAM" onclick="setCategory('RAM', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">內存 (RAM)</button>
-                <button data-cat="MB" onclick="setCategory('MB', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">主機板</button>
-                <button data-cat="SSD" onclick="setCategory('SSD', this)" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">儲存 (SSD)</button>
+                <button data-cat="All" onclick="setCategory('All')" class="cat-btn bg-blue-600 text-white px-4 py-1.5 rounded-full whitespace-nowrap shadow-sm">全部</button>
+                <button data-cat="GPU" onclick="setCategory('GPU')" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">顯示卡 (GPU)</button>
+                <button data-cat="CPU" onclick="setCategory('CPU')" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">處理器 (CPU)</button>
+                <button data-cat="RAM" onclick="setCategory('RAM')" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">內存 (RAM)</button>
+                <button data-cat="MB" onclick="setCategory('MB')" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">主機板</button>
+                <button data-cat="SSD" onclick="setCategory('SSD')" class="cat-btn bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-full whitespace-nowrap">儲存 (SSD)</button>
             </div>
         </div>
 
@@ -112,45 +112,48 @@
             `).join('');
         }
 
-        // 修改 URL 並過濾內容
-        function setCategory(cat, btn, shouldPushState = true) {
+        // 更新 URL 參數的核心函數
+        function updateURL(params) {
+            const url = new URL(window.location);
+            Object.keys(params).forEach(key => {
+                if (params[key] === 'All' || params[key] === 'none') {
+                    url.searchParams.delete(key);
+                } else {
+                    url.searchParams.set(key, params[key]);
+                }
+            });
+            history.pushState({}, '', url);
+        }
+
+        function setCategory(cat) {
             currentCategory = cat;
             
-            // UI切換
+            // UI 更新
             document.querySelectorAll('.cat-btn').forEach(b => {
-                b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-                b.classList.add('bg-gray-200', 'text-gray-700');
+                const isMatch = b.getAttribute('data-cat') === cat;
+                b.classList.toggle('bg-blue-600', isMatch);
+                b.classList.toggle('text-white', isMatch);
+                b.classList.toggle('bg-gray-200', !isMatch);
+                b.classList.toggle('text-gray-700', !isMatch);
             });
-            
-            const activeBtn = btn || document.querySelector(`.cat-btn[data-cat="${cat}"]`);
-            if (activeBtn) {
-                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-            }
 
-            // 更新網址 URL (如果不點擊「全部」，網址會加上 ?cat=...)
-            if (shouldPushState) {
-                const newUrl = cat === 'All' ? window.location.pathname : `?cat=${cat}`;
-                history.pushState({ category: cat }, '', newUrl);
-            }
-
+            updateURL({ cat: cat });
             filterAll();
         }
 
-        // 監聽瀏覽器上一頁/下一頁
-        window.onpopstate = function(event) {
-            const cat = (event.state && event.state.category) ? event.state.category : 'All';
-            setCategory(cat, null, false);
-        };
-
         function toggleSort() {
-            if (sortOrder === 'none' || sortOrder === 'asc') {
-                sortOrder = 'desc';
-                document.getElementById('sortIcon').innerText = '▼';
-            } else {
-                sortOrder = 'asc';
-                document.getElementById('sortIcon').innerText = '▲';
-            }
+            // 切換狀態: none -> desc -> asc -> none
+            if (sortOrder === 'none') sortOrder = 'desc';
+            else if (sortOrder === 'desc') sortOrder = 'asc';
+            else sortOrder = 'none';
+
+            // 更新按鈕圖示
+            const icon = document.getElementById('sortIcon');
+            if (sortOrder === 'desc') icon.innerText = '▼';
+            else if (sortOrder === 'asc') icon.innerText = '▲';
+            else icon.innerText = '⇅';
+
+            updateURL({ sort: sortOrder });
             filterAll();
         }
 
@@ -162,18 +165,33 @@
                 return matchCategory && matchSearch;
             });
 
+            // 排序邏輯
             if (sortOrder === 'desc') filtered.sort((a, b) => b.price - a.price);
             else if (sortOrder === 'asc') filtered.sort((a, b) => a.price - b.price);
             
             render(filtered);
         }
 
-        // 頁面加載時檢查 URL 參數
+        // 頁面初次加載：從 URL 讀取狀態
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // 讀取分類
             const cat = urlParams.get('cat') || 'All';
-            setCategory(cat, null, false);
+            setCategory(cat);
+
+            // 讀取排序
+            const sort = urlParams.get('sort') || 'none';
+            sortOrder = sort;
+            const icon = document.getElementById('sortIcon');
+            if (sortOrder === 'desc') icon.innerText = '▼';
+            else if (sortOrder === 'asc') icon.innerText = '▲';
+            
+            filterAll();
         };
+
+        // 支援瀏覽器上一頁/下一頁
+        window.onpopstate = () => location.reload();
     </script>
 </body>
 </html>
